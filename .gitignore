@@ -1,0 +1,18 @@
+# --- FRONTEND (React/Vite) ---
+node_modules/
+dist/
+dist-ssr/
+npm-debug.log*
+
+# --- BACKEND (Python/Flask) ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# --- OS & EDITOR SETTINGS ---
+.DS_Store
+.vscode/
+.idea/
