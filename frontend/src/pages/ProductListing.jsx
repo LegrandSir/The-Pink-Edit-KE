@@ -1,26 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Grid, List, ChevronDown, X } from 'lucide-react';
+import { Grid, List, ChevronDown, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Mock Data updated with 'inStock' and 'scent' properties
-const products = [
-  { id: 1, name: "Rose Noire Eau de Parfum", category: "Perfumes", price: 185, tag: "Best Seller", inStock: true, scent: "Floral", img: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=500&auto=format&fit=crop" },
-  { id: 2, name: "18k Floating Diamond Necklace", category: "Fine Jewellery", price: 1250, tag: "Limited Edition", inStock: false, scent: null, img: "https://images.unsplash.com/photo-1599643478524-fb66fa5320e5?q=80&w=500&auto=format&fit=crop" },
-  { id: 3, name: "Velvet Tuberose Candle", category: "Home Fragrance", price: 65, tag: "", inStock: true, scent: "Woody", img: "https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=500&auto=format&fit=crop" },
-  { id: 4, name: "Petite Pearl Drop Earrings", category: "Fine Jewellery", price: 420, tag: "New", inStock: true, scent: null, img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=500&auto=format&fit=crop" },
-  { id: 5, name: "L'Ombre Extrait", category: "Perfumes", price: 340, tag: "", inStock: true, scent: "Woody", img: "https://images.unsplash.com/photo-1523293115678-efa8003fdf53?q=80&w=500&auto=format&fit=crop" },
-  { id: 6, name: "Stackable Eternity Band", category: "Fine Jewellery", price: 890, tag: "", inStock: false, scent: null, img: "https://images.unsplash.com/photo-1605100804763-247f67b2548e?q=80&w=500&auto=format&fit=crop" },
-  { id: 7, name: "Citron Glacé Mist", category: "Perfumes", price: 95, tag: "", inStock: true, scent: "Citrus", img: "https://images.unsplash.com/photo-1595425964071-1a3b1a8f9411?q=80&w=500&auto=format&fit=crop" },
-  { id: 8, name: "Celestial Moon Ring", category: "Fine Jewellery", price: 320, tag: "Handmade", inStock: true, scent: null, img: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=500&auto=format&fit=crop" },
-];
-
 export default function ProductListing() {
+  // 1. New State for Live Data
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [inStockOnly, setInStockOnly] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All Collections");
   const [activeScent, setActiveScent] = useState(null);
+
+  // 2. Fetch Data from Flask on Component Mount
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/api/products')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch products');
+        return res.json();
+      })
+      .then(data => {
+        // Map the backend data to match our frontend UI variables
+        const formattedProducts = data.map(p => ({
+          id: p.id,
+          name: p.title,
+          category: p.category,
+          price: p.base_price,
+          tag: p.tags || "",
+          // It's in stock if any of its variants have an available_stock > 0
+          inStock: p.variants.some(v => v.available_stock > 0), 
+          scent: p.scent_family,
+          img: p.media.length > 0 ? p.media[0].image_url : "https://images.unsplash.com/photo-1615397323214-99a3861250ce?q=80&w=500&auto=format&fit=crop"
+        }));
+        
+        setProducts(formattedProducts);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setError("Unable to load the collection. Please try again later.");
+        setIsLoading(false);
+      });
+  }, []); // Empty dependency array means this runs once on load
 
   // The Magic Filtering Logic
   const filteredProducts = products.filter(product => {
@@ -120,41 +144,56 @@ export default function ProductListing() {
             <span className="ml-auto italic">Showing {filteredProducts.length} products</span>
           </div>
 
-          <motion.div layout className="grid grid-cols-3 gap-x-8 gap-y-12">
-            <AnimatePresence>
-              {filteredProducts.map((product) => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3 }}
-                  key={product.id} 
-                >
-                  <Link to="/product" className="group cursor-pointer flex flex-col">
-                    <div className="relative bg-gray-100 aspect-[4/5] mb-4 overflow-hidden rounded-sm">
-                      {!product.inStock && (
-                        <div className="absolute inset-0 bg-white/50 z-20 flex items-center justify-center backdrop-blur-[1px]">
-                           <span className="bg-white px-4 py-2 text-xs uppercase tracking-widest font-bold text-gray-500 border border-gray-200">Out of Stock</span>
-                        </div>
-                      )}
-                      {product.tag && (
-                        <span className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-widest font-bold text-gray-800 rounded-sm">
-                          {product.tag}
-                        </span>
-                      )}
-                      <img src={product.img} alt={product.name} className={`w-full h-full object-cover transition-transform duration-700 ${product.inStock ? 'group-hover:scale-105' : 'grayscale'}`} />
-                    </div>
-                    <div className="text-center">
-                      <span className="text-[10px] text-pink-400 font-bold uppercase tracking-widest">{product.category}</span>
-                      <h4 className="font-serif text-lg mt-1 mb-1 group-hover:text-pink-500 transition-colors">{product.name}</h4>
-                      <p className="text-gray-500 italic">${product.price}</p>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          {/* Handle Loading and Error States */}
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64 text-pink-400">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="text-center text-gray-500 h-64 flex flex-col justify-center">
+              <p>{error}</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+             <div className="text-center text-gray-500 h-64 flex flex-col justify-center italic">
+              <p>No products found matching your selections.</p>
+            </div>
+          ) : (
+            <motion.div layout className="grid grid-cols-3 gap-x-8 gap-y-12">
+              <AnimatePresence>
+                {filteredProducts.map((product) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                    key={product.id} 
+                  >
+                    <Link to={`/product/${product.id}`} className="group cursor-pointer flex flex-col">
+                      <div className="relative bg-gray-100 aspect-[4/5] mb-4 overflow-hidden rounded-sm">
+                        {!product.inStock && (
+                          <div className="absolute inset-0 bg-white/50 z-20 flex items-center justify-center backdrop-blur-[1px]">
+                             <span className="bg-white px-4 py-2 text-xs uppercase tracking-widest font-bold text-gray-500 border border-gray-200">Out of Stock</span>
+                          </div>
+                        )}
+                        {product.tag && (
+                          <span className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-widest font-bold text-gray-800 rounded-sm">
+                            {product.tag}
+                          </span>
+                        )}
+                        <img src={product.img} alt={product.name} className={`w-full h-full object-cover transition-transform duration-700 ${product.inStock ? 'group-hover:scale-105' : 'grayscale'}`} />
+                      </div>
+                      <div className="text-center">
+                        <span className="text-[10px] text-pink-400 font-bold uppercase tracking-widest">{product.category}</span>
+                        <h4 className="font-serif text-lg mt-1 mb-1 group-hover:text-pink-500 transition-colors">{product.name}</h4>
+                        <p className="text-gray-500 italic">${product.price.toFixed(2)}</p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
         </div>
       </div>
       

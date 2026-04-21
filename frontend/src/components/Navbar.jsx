@@ -22,9 +22,9 @@ export default function Navbar() {
     <>
       <nav className="flex justify-between items-center px-12 py-6 bg-white sticky top-0 z-50 shadow-sm relative">
         <div className="flex gap-8 text-sm uppercase tracking-wider text-gray-600">
+          <Link to="/" className="hover:text-pink-500 transition-colors">Journal</Link>
           <Link to="/shop" className="hover:text-pink-500 font-bold transition-colors">Shop</Link>
           <Link to="/shop" className="hover:text-pink-500 transition-colors">Collections</Link>
-          <Link to="/" className="hover:text-pink-500 transition-colors">Journal</Link>
         </div>
         
         <Link to="/" className="text-3xl font-serif text-pink-400 tracking-widest hover:opacity-80 transition-opacity">

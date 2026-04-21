@@ -1,10 +1,20 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+  
+  // 1. Initialize cart from localStorage, or default to an empty array
+  const [cartItems, setCartItems] = useState(() => {
+    const savedCart = localStorage.getItem('pinkEditCart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  // 2. Automatically save to localStorage whenever cartItems change
+  useEffect(() => {
+    localStorage.setItem('pinkEditCart', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const toggleCart = () => setIsCartOpen(!isCartOpen);
 

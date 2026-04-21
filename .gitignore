@@ -16,3 +16,9 @@ env/
 .DS_Store
 .vscode/
 .idea/
+
+# backend/.gitignore
+.env
+instance/
+__pycache__/
+venv/

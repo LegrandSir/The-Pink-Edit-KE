@@ -1,24 +1,63 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Minus, Plus, ChevronDown, ChevronUp, Truck, ShieldCheck } from 'lucide-react';
+import { Heart, Minus, Plus, ChevronDown, ChevronUp, Truck, ShieldCheck, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { CartContext } from '../context/CartContext';
 
 export default function ProductDetail() {
-  const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState('100ml');
-  const [activeImage, setActiveImage] = useState('https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=800&auto=format&fit=crop');
-  const [openAccordion, setOpenAccordion] = useState('notes'); 
-  
+  const { id } = useParams(); // Grabs the ID from the URL
   const { addToCart, toggleCart } = useContext(CartContext);
 
+  // Data State
+  const [product, setProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // UI State
+  const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [activeImage, setActiveImage] = useState('');
+  const [openAccordion, setOpenAccordion] = useState('notes');
+
+  useEffect(() => {
+    // Fetch the specific product from Flask
+    fetch(`http://127.0.0.1:5000/api/products/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Product not found');
+        return res.json();
+      })
+      .then(data => {
+        setProduct(data);
+        // Set defaults based on the fetched data
+        if (data.variants && data.variants.length > 0) {
+          setSelectedSize(data.variants[0].size || 'One Size');
+        }
+        if (data.media && data.media.length > 0) {
+          setActiveImage(data.media[0].image_url);
+        }
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setError("Unable to load product details.");
+        setIsLoading(false);
+      });
+  }, [id]);
+
   const handleAddToBag = () => {
+    if (!product) return;
+    
+    // Find the price adjustment for the selected variant
+    const variant = product.variants.find(v => v.size === selectedSize) || product.variants[0];
+    const finalPrice = product.base_price + (variant.price_adjustment || 0);
+
     addToCart({
-      id: 'rose-nocturne',
-      name: "Rose Nocturne",
-      category: "Perfume",
-      price: 240.00,
+      id: product.id,
+      name: product.title,
+      category: product.category,
+      price: finalPrice,
       qty: quantity,
       size: selectedSize,
       img: activeImage
@@ -26,44 +65,57 @@ export default function ProductDetail() {
     toggleCart(); 
   };
 
-  const thumbnails = [
-    'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1595425970377-c9703bc48baf?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=800&auto=format&fit=crop'
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#faf8f8]">
+        <Navbar />
+        <div className="flex-1 flex justify-center items-center text-pink-400"><Loader2 className="w-8 h-8 animate-spin" /></div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#faf8f8]">
+        <Navbar />
+        <div className="flex-1 flex flex-col justify-center items-center text-gray-500">
+          <p>{error}</p>
+          <Link to="/shop" className="mt-4 text-pink-500 underline uppercase tracking-widest text-xs">Return to Shop</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf8f8] text-gray-900 font-sans">
       <Navbar />
 
-      {/* BREADCRUMBS */}
       <div className="max-w-7xl mx-auto w-full px-12 py-6 text-xs uppercase tracking-widest text-gray-500">
-        <span className="hover:text-pink-500 cursor-pointer">Home</span> <span className="mx-2">/</span>
-        <span className="hover:text-pink-500 cursor-pointer">Perfumes</span> <span className="mx-2">/</span>
-        <span className="text-gray-900 font-bold">Rose Nocturne</span>
+        <Link to="/" className="hover:text-pink-500 transition-colors">Home</Link> <span className="mx-2">/</span>
+        <Link to="/shop" className="hover:text-pink-500 transition-colors">{product.category}</Link> <span className="mx-2">/</span>
+        <span className="text-gray-900 font-bold">{product.title}</span>
       </div>
 
-      {/* MAIN PRODUCT SECTION */}
       <div className="max-w-7xl mx-auto px-12 pb-24 grid grid-cols-2 gap-16 w-full">
-        
         {/* Left: Images */}
         <div className="flex gap-6 h-[600px]">
-          <div className="flex flex-col gap-4 w-20 flex-shrink-0">
-            {thumbnails.map((img, idx) => (
+          <div className="flex flex-col gap-4 w-20 flex-shrink-0 overflow-y-auto">
+            {product.media.map((img) => (
               <img 
-                key={idx} 
-                src={img} 
-                onClick={() => setActiveImage(img)}
-                className={`w-full aspect-square object-cover cursor-pointer rounded-sm border-2 transition-all ${activeImage === img ? 'border-pink-300 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                alt={`Thumbnail ${idx}`}
+                key={img.id} 
+                src={img.image_url} 
+                onClick={() => setActiveImage(img.image_url)}
+                className={`w-full aspect-square object-cover cursor-pointer rounded-sm border-2 transition-all ${activeImage === img.image_url ? 'border-pink-300 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                alt="Thumbnail"
               />
             ))}
           </div>
           <div className="flex-1 bg-gray-100 rounded-sm relative overflow-hidden">
-             <span className="absolute top-6 left-6 z-10 bg-yellow-100 text-yellow-800 px-3 py-1 text-[10px] uppercase tracking-widest font-bold rounded-sm">
-                Best Seller
-             </span>
+             {product.tags && (
+               <span className="absolute top-6 left-6 z-10 bg-yellow-100 text-yellow-800 px-3 py-1 text-[10px] uppercase tracking-widest font-bold rounded-sm">
+                  {product.tags}
+               </span>
+             )}
              <AnimatePresence mode="wait">
                 <motion.img 
                   key={activeImage}
@@ -73,7 +125,7 @@ export default function ProductDetail() {
                   transition={{ duration: 0.3 }}
                   src={activeImage} 
                   className="w-full h-full object-cover" 
-                  alt="Rose Nocturne" 
+                  alt={product.title} 
                 />
              </AnimatePresence>
           </div>
@@ -82,41 +134,37 @@ export default function ProductDetail() {
         {/* Right: Product Details */}
         <div className="flex flex-col justify-center">
           <div className="flex justify-between items-start mb-2">
-            <span className="text-pink-500 text-xs font-bold tracking-widest uppercase">Signature Collection</span>
+            <span className="text-pink-500 text-xs font-bold tracking-widest uppercase">{product.collection || product.category}</span>
             <Heart className="w-5 h-5 text-gray-400 cursor-pointer hover:text-pink-500 hover:fill-pink-50" />
           </div>
           
-          <h1 className="text-4xl font-serif mb-1">Rose Nocturne</h1>
-          <h2 className="text-2xl font-serif italic text-gray-600 mb-4">Eau de Parfum</h2>
+          <h1 className="text-4xl font-serif mb-4">{product.title}</h1>
           
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex text-yellow-400 text-sm">★★★★★</div>
-            <span className="text-xs text-gray-500 underline cursor-pointer">(48 Reviews)</span>
-          </div>
-
-          <p className="text-xl mb-6 font-medium">$240.00</p>
+          <p className="text-xl mb-6 font-medium">${product.base_price.toFixed(2)}</p>
           <p className="text-gray-600 font-light leading-relaxed mb-8 text-sm">
-            An olfactory narrative of a midnight garden. Rose Nocturne blends the velvety richness of Damask Rose with the mysterious depth of patchouli and smoked oud. A scent crafted for those who find beauty in the shadows.
+            {product.description}
           </p>
 
-          {/* Size Selector */}
-          <div className="mb-6">
-            <div className="flex justify-between text-xs mb-3">
-              <span className="font-bold uppercase tracking-widest text-gray-700">Select Size</span>
-              <span className="text-gray-400 underline cursor-pointer">Size Guide</span>
+          {/* Size/Variant Selector */}
+          {product.variants.length > 0 && product.variants[0].size && (
+            <div className="mb-6">
+              <div className="flex justify-between text-xs mb-3">
+                <span className="font-bold uppercase tracking-widest text-gray-700">Select Variant</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {product.variants.map(v => (
+                  <button 
+                    key={v.id}
+                    onClick={() => setSelectedSize(v.size)}
+                    disabled={v.available_stock === 0}
+                    className={`py-3 text-sm rounded-sm border transition-colors ${selectedSize === v.size ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-300 text-gray-700 hover:border-gray-900'} ${v.available_stock === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  >
+                    {v.size} {v.available_stock === 0 ? '(Out of Stock)' : ''}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              {['30ml', '100ml', '200ml'].map(size => (
-                <button 
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={`py-3 text-sm rounded-sm border transition-colors ${selectedSize === size ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-300 text-gray-700 hover:border-gray-900'}`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* Quantity & Add to Cart */}
           <div className="flex gap-4 mb-8">
@@ -143,8 +191,7 @@ export default function ProductDetail() {
           {/* Accordions */}
           <div className="space-y-4">
             {[
-              { id: 'notes', title: 'Scent Notes', content: 'Top: Pink Pepper, Bergamot. Heart: Damask Rose, Velvet Woods. Base: Patchouli, Smoked Oud, Vanilla.' },
-              { id: 'ingredients', title: 'Ingredients & Care', content: 'Alcohol Denat., Parfum (Fragrance), Aqua (Water), Citronellol, Geraniol. Keep away from direct sunlight.' },
+              { id: 'notes', title: 'Details', content: product.scent_family ? `Family: ${product.scent_family}` : 'Exquisite craftsmanship.' },
               { id: 'shipping', title: 'Complimentary Shipping', content: 'Free express shipping on all orders above $150. Returns accepted within 14 days of delivery.' }
             ].map(item => (
               <div key={item.id} className="border-b border-gray-200 pb-4">
