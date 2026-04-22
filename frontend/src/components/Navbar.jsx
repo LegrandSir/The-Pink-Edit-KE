@@ -33,7 +33,11 @@ export default function Navbar() {
         
         <div className="flex gap-6 text-gray-600 items-center">
           <Search onClick={() => setIsSearchOpen(true)} className="w-5 h-5 cursor-pointer hover:text-pink-500" />
-          <User className="w-5 h-5 cursor-pointer hover:text-pink-500" />
+          
+          <Link to="/login">
+            <User className="w-5 h-5 cursor-pointer hover:text-pink-500" />
+          </Link>
+          
           <div className="relative cursor-pointer group" onClick={toggleCart}>
             <ShoppingBag className="w-5 h-5 group-hover:text-pink-500 transition-colors" />
             {cartItems.length > 0 && (

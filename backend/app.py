@@ -181,6 +181,27 @@ def create_app():
         """Powers the Orders List page."""
         orders = Order.query.order_by(Order.created_at.desc()).all()
         return jsonify([order.to_dict() for order in orders]), 200
+    
+    @app.route('/api/admin/orders/<int:order_id>', methods=['GET'])
+    @jwt_required()
+    def get_single_order(order_id):
+        order = Order.query.filter_by(id=order_id).first()
+        if not order:
+            return jsonify({"error": "Order not found"}), 404
+            
+        # Manually build the dictionary to include the items
+        order_data = order.to_dict()
+        order_data['items'] = []
+        for item in order.items:
+            order_data['items'].append({
+                "id": item.id,
+                "product_name": item.variant.product.title if item.variant and item.variant.product else "Unknown",
+                "sku": item.variant.sku if item.variant else "Unknown",
+                "quantity": item.quantity,
+                "price": item.price_at_purchase
+            })
+            
+        return jsonify(order_data), 200
 
     @app.route('/api/admin/customers', methods=['GET'])
     @jwt_required()
