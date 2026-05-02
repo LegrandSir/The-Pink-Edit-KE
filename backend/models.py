@@ -130,6 +130,8 @@ class ProductMedia(db.Model):
     
 # ... (Keep AdminUser, Product, ProductVariant, ProductMedia above this) ...
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 class Customer(db.Model):
     __tablename__ = 'customers'
 
@@ -139,12 +141,23 @@ class Customer(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone_number = db.Column(db.String(20), nullable=True)
     
-    # Insights for the Admin Dashboard
+    # --- ADD THIS ROW FOR PASSWORDS ---
+    password_hash = db.Column(db.String(256), nullable=True) 
+    
     status = db.Column(db.String(50), default='New') # 'New', 'Regular', 'VIP'
     total_spent = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     orders = db.relationship('Order', backref='customer', lazy=True)
+
+    # --- ADD THESE TWO METHODS ---
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
         return {
@@ -212,3 +225,20 @@ class Payment(db.Model):
     status = db.Column(db.String(50), default='Pending') # 'Pending', 'Completed', 'Failed'
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+class Cart(db.Model):
+    __tablename__ = 'carts'
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    items = db.relationship('CartItem', backref='cart', lazy=True, cascade="all, delete-orphan")
+
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
+    id = db.Column(db.Integer, primary_key=True)
+    cart_id = db.Column(db.Integer, db.ForeignKey('carts.id'), nullable=False)
+    # Assuming you have a Product or ProductVariant model. Adjust the ForeignKey to match your exact setup!
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False) 
+    quantity = db.Column(db.Integer, default=1, nullable=False)

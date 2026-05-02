@@ -2,11 +2,12 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from extensions import db, jwt, migrate
-from models import AdminUser, Product, ProductVariant, ProductMedia, Customer, Order, Payment
+from models import AdminUser, Product, ProductVariant, ProductMedia, Customer, Order, Payment,Cart, CartItem
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from mpesa_utils import get_mpesa_access_token, generate_password, format_phone_number, BUSINESS_SHORTCODE
 import requests
 from datetime import datetime
+from werkzeug.security import generate_password_hash
 
 def create_app():
     app = Flask(__name__)
@@ -74,7 +75,7 @@ def create_app():
     @app.route('/api/products', methods=['GET'])
     def get_products():
         # Only fetch products that haven't been soft-deleted and are Active
-        products = Product.query.filter_by(is_deleted=False, status='Active').all()
+        products = Product.query.all()
         return jsonify([product.to_dict() for product in products]), 200
 
     # ---------------------------------------------------------
@@ -313,6 +314,172 @@ def create_app():
         # You must return a success response so Safaricom knows you received it
         return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"}), 200
     
+    # ---------------------------------------------------------
+    # ROUTE: CUSTOMER REGISTRATION
+    # ---------------------------------------------------------
+    # ---------------------------------------------------------
+    # ROUTE: CUSTOMER REGISTRATION
+    # ---------------------------------------------------------
+    @app.route('/api/register', methods=['POST'])
+    def register_customer():
+        data = request.get_json()
+        
+        # 1. Look for the single 'name' field coming from React
+        if not data or not data.get('email') or not data.get('password') or not data.get('name'):
+            return jsonify({"error": "Name, email, and password are required"}), 400
+            
+        if Customer.query.filter_by(email=data['email']).first():
+            return jsonify({"error": "An account with that email already exists."}), 409
+            
+        # 2. Split "paul wafula" into "paul" and "wafula"
+        full_name = data.get('name').strip()
+        name_parts = full_name.split(' ', 1) # Splits only on the first space
+        f_name = name_parts[0]
+        l_name = name_parts[1] if len(name_parts) > 1 else '' # Fallback if they only type one name
+            
+        # 3. Feed the split names to the database model
+        new_customer = Customer(
+            first_name=f_name,
+            last_name=l_name,
+            email=data['email']
+        )
+        new_customer.set_password(data['password'])
+        
+        db.session.add(new_customer)
+        db.session.commit()
+        
+        return jsonify({"message": "Account created successfully!"}), 201
+
+    # ---------------------------------------------------------
+    # ROUTE: CUSTOMER LOGIN
+    # ---------------------------------------------------------
+    @app.route('/api/login', methods=['POST'])
+    def customer_login():
+        data = request.get_json()
+        
+        if not data or not data.get('email') or not data.get('password'):
+            return jsonify({"error": "Missing email or password"}), 400
+            
+        customer = Customer.query.filter_by(email=data['email']).first()
+        
+        if not customer or not customer.check_password(data['password']):
+            return jsonify({"error": "Invalid email or password"}), 401
+            
+        # Generate the JWT token! 
+        # We add a claim "role: customer" so we know they aren't an admin
+        access_token = create_access_token(
+            identity=customer.id, 
+            additional_claims={"role": "customer"}
+        )
+        
+        return jsonify({
+            "access_token": access_token,
+            "user": customer.to_dict()
+        }), 200
+    
+    # ---------------------------------------------------------
+    # ROUTE: GOOGLE SIGN-IN
+    # ---------------------------------------------------------
+    @app.route('/api/auth/google', methods=['POST'])
+    def google_auth():
+        data = request.get_json()
+        access_token = data.get('access_token')
+
+        if not access_token:
+            return jsonify({"error": "No access token provided"}), 400
+
+        # Verify the token with Google's servers
+        google_res = requests.get(f'https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}')
+        if not google_res.ok:
+            return jsonify({"error": "Invalid Google token"}), 401
+
+        user_info = google_res.json()
+        email = user_info.get('email')
+        full_name = user_info.get('name', 'Google User')
+
+        # Split the name
+        name_parts = full_name.split(' ', 1)
+        f_name = name_parts[0]
+        l_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        # Check if customer exists
+        customer = Customer.query.filter_by(email=email).first()
+
+        # If they don't exist, magically create an account for them!
+        if not customer:
+            customer = Customer(
+                first_name=f_name,
+                last_name=l_name,
+                email=email
+            )
+            # We don't set a password hash here! 
+            db.session.add(customer)
+            db.session.commit()
+
+        # Generate our JWT token
+        jwt_token = create_access_token(
+            identity=customer.id, 
+            additional_claims={"role": "customer"}
+        )
+
+        return jsonify({
+            "access_token": jwt_token,
+            "user": customer.to_dict()
+        }), 200
+    
+    # ---------------------------------------------------------
+    # ROUTE: SYNC CART
+    # ---------------------------------------------------------
+    @app.route('/api/cart/sync', methods=['POST'])
+    @jwt_required()
+    def sync_cart():
+        current_user_id = get_jwt_identity()
+        data = request.get_json()
+        local_items = data.get('localItems', [])
+
+        # 1. Find or create the user's cart in the DB
+        cart = Cart.query.filter_by(customer_id=current_user_id).first()
+        if not cart:
+            cart = Cart(customer_id=current_user_id)
+            db.session.add(cart)
+            db.session.commit()
+
+        # 2. Merge local items into the database
+        for item in local_items:
+            db_item = CartItem.query.filter_by(cart_id=cart.id, product_id=item['id']).first()
+            if db_item:
+                # If it's in both, take the higher quantity to prevent losing items
+                db_item.quantity = max(db_item.quantity, item.get('qty', 1))
+            else:
+                # Add new local item to DB
+                new_item = CartItem(cart_id=cart.id, product_id=item['id'], quantity=item.get('qty', 1))
+                db.session.add(new_item)
+        
+        db.session.commit()
+
+        # 3. Build the Master Cart list to send back to React
+        # Note: In a real app, you would query your Product model here to get the full title, price, and image.
+        # For now, we will construct a basic representation from the DB items.
+       # 3. Build the Master Cart list to send back to React
+        # 3. Build the Master Cart list to send back to React
+        # 3. Build the Master Cart list to send back to React
+        master_cart = []
+        for db_item in cart.items:
+            # Look up the actual product in your database using the ID
+            product = db.session.get(Product, db_item.product_id)
+            
+            if product:
+                # Safely grab the first image's URL using the exact column name from your model
+                primary_image = product.media[0].image_url if product.media else ""
+                
+                master_cart.append({
+                    "id": db_item.product_id,
+                    "qty": db_item.quantity,
+                    "title": product.title,        
+                    "price": product.base_price,   
+                    "image": primary_image         
+                })
+        return jsonify({"cartItems": master_cart}), 200
     return app
 
 if __name__ == '__main__':

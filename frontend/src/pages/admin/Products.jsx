@@ -1,32 +1,106 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Plus, Search, Filter, MoreHorizontal, Package, AlertCircle, CheckCircle2, Edit3, Loader2 } from 'lucide-react';
+import { Download, Plus, Search, Filter, MoreHorizontal, Package, AlertCircle, CheckCircle2, Edit3, Loader2, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // --- New Modal State ---
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    title: '',
+    category: 'Perfume',
+    base_price: '',
+    description: ''
+  });
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      
+      const res = await fetch('http://127.0.0.1:5000/api/products', {
+        headers: {
+          'Authorization': `Bearer ${token}` 
+        },
+        // FIX 1: Tell the browser NEVER to cache this specific request!
+        cache: 'no-store' 
+      });
+      
+      const data = await res.json();
+      
+      if (Array.isArray(data)) {
+        // FIX 2: Sort the array so the highest ID (newest product) is at the very top
+        const sortedProducts = data.sort((a, b) => b.id - a.id);
+        setProducts(sortedProducts);
+      } else {
+        console.error("Backend returned an error instead of products:", data);
+        setProducts([]); 
+      }
+    } catch (err) {
+      console.error("Network error fetching products:", err);
+      setProducts([]); 
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Fetch products
-    fetch('http://127.0.0.1:5000/api/products')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data);
-        setIsLoading(false);
-      })
-      .catch(err => console.error(err));
+    fetchProducts();
   }, []);
 
-  // Calculate quick stats from the loaded data
+ // --- Handle Form Submission ---
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const token = localStorage.getItem('adminToken');
+
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/products', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          title: newProduct.title,
+          category: newProduct.category,
+          base_price: parseFloat(newProduct.base_price),
+          description: newProduct.description
+        })
+      });
+
+      if (res.ok) {
+        await fetchProducts();
+        setIsAddModalOpen(false);
+        setNewProduct({ title: '', category: 'Perfume', base_price: '', description: '' });
+      } else {
+        const errorData = await res.json(); 
+        console.error(`Failed to add product. Status: ${res.status}`, errorData);
+      }
+    } catch (err) {
+      console.error("Server connection error", err);
+    }
+    
+    setIsSubmitting(false);
+  };
+
   const totalProducts = products.length;
-  const lowStockItems = products.filter(p => p.variants.some(v => v.available_stock > 0 && v.available_stock < 10)).length;
+  const lowStockItems = products.filter(p => p.variants?.some(v => v.available_stock > 0 && v.available_stock < 10)).length;
   const activeListings = products.filter(p => p.status === 'Active').length;
 
   if (isLoading) {
     return <div className="h-full flex items-center justify-center text-pink-500"><Loader2 className="w-8 h-8 animate-spin" /></div>;
   }
 
+  // Your return ( <div className="max-w-7xl mx-auto space-y-8 relative"> ... ) starts immediately below here!
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8 relative">
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
@@ -37,7 +111,10 @@ export default function Products() {
           <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-sm text-sm font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors">
             <Download className="w-4 h-4" /> Export CSV
           </button>
-          <button className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-sm text-sm font-bold uppercase tracking-widest transition-colors">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-sm text-sm font-bold uppercase tracking-widest transition-colors"
+          >
             <Plus className="w-4 h-4" /> Add New Product
           </button>
         </div>
@@ -49,7 +126,7 @@ export default function Products() {
           { title: 'Total Products', value: totalProducts, icon: Package },
           { title: 'Low Stock Items', value: lowStockItems, icon: AlertCircle },
           { title: 'Active Listings', value: activeListings, icon: CheckCircle2 },
-          { title: 'Drafts', value: 0, icon: Edit3 },
+          { title: 'Drafts', value: products.filter(p => p.status === 'Draft').length, icon: Edit3 },
         ].map((stat, idx) => (
           <div key={idx} className="bg-white p-6 rounded-sm border border-gray-100 shadow-sm flex items-center justify-between">
             <div>
@@ -98,9 +175,8 @@ export default function Products() {
             </thead>
             <tbody>
               {products.map((product) => {
-                // Calculate total stock across all sizes/variants
-                const totalStock = product.variants.reduce((sum, v) => sum + v.available_stock, 0);
-                const mainImage = product.media.find(m => m.is_main_image)?.image_url || product.media[0]?.image_url;
+                const totalStock = product.variants?.reduce((sum, v) => sum + v.available_stock, 0) || 0;
+                const mainImage = product.media?.find(m => m.is_main_image)?.image_url || product.media?.[0]?.image_url;
 
                 return (
                   <tr key={product.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors group">
@@ -114,7 +190,7 @@ export default function Products() {
                       <p className="font-serif text-gray-900 group-hover:text-pink-600 transition-colors cursor-pointer">{product.title}</p>
                       <p className="text-xs text-gray-500 mt-1">{product.category}</p>
                     </td>
-                    <td className="p-4 text-sm font-medium text-gray-900">${product.base_price.toFixed(2)}</td>
+                    <td className="p-4 text-sm font-medium text-gray-900">${product.base_price?.toFixed(2)}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-sm">
                         {totalStock === 0 ? (
@@ -143,6 +219,96 @@ export default function Products() {
           </table>
         </div>
       </div>
+
+      {/* --- ADD PRODUCT MODAL --- */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white w-full max-w-lg rounded-sm shadow-xl border border-gray-200 overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 className="font-serif text-xl text-gray-900">Create New Product</h2>
+                <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddProduct} className="p-6 space-y-5">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">Product Title</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={newProduct.title}
+                    onChange={(e) => setNewProduct({...newProduct, title: e.target.value})}
+                    className="w-full px-4 py-2 bg-[#faf8f8] border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-pink-400" 
+                    placeholder="e.g. 18k Eternal Gold Ring"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">Category</label>
+                    <select 
+                      value={newProduct.category}
+                      onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                      className="w-full px-4 py-2 bg-[#faf8f8] border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-pink-400"
+                    >
+                      <option>Perfume</option>
+                      <option>Fine Jewellery</option>
+                      <option>Accessories</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">Base Price ($)</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      required
+                      value={newProduct.base_price}
+                      onChange={(e) => setNewProduct({...newProduct, base_price: e.target.value})}
+                      className="w-full px-4 py-2 bg-[#faf8f8] border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-pink-400" 
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">Description</label>
+                  <textarea 
+                    rows="3"
+                    value={newProduct.description}
+                    onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                    className="w-full px-4 py-2 bg-[#faf8f8] border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-pink-400 resize-none" 
+                    placeholder="Brief product description..."
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3 justify-end border-t border-gray-100">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-6 py-2 text-sm font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 rounded-sm transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className={`flex items-center justify-center min-w-[120px] px-6 py-2 bg-pink-500 text-white rounded-sm text-sm font-bold uppercase tracking-widest hover:bg-pink-600 transition-colors ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  >
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Draft'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

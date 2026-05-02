@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
+import { CartContext } from '../context/CartContext';
 
 export default function UserLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { syncCartWithServer } = useContext(CartContext);
   
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Look for the breadcrumb, or default to the shop!
+  const redirectTarget = location.state?.from || '/shop';
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,7 +24,6 @@ export default function UserLogin() {
     setError('');
 
     try {
-      // NOTE: We will build this Flask route later!
       const response = await fetch('http://127.0.0.1:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -27,12 +33,12 @@ export default function UserLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        // Save the CUSTOMER token (separate from adminToken)
         localStorage.setItem('userToken', data.access_token);
+        await syncCartWithServer();
         localStorage.setItem('userData', JSON.stringify(data.user));
         
-        // Redirect back to shop or checkout
-        navigate('/shop');
+        // UPDATE: Use the redirect target here!
+        navigate(redirectTarget, { replace: true });
       } else {
         setError(data.error || 'Invalid email or password.');
         setIsLoading(false);
@@ -42,6 +48,35 @@ export default function UserLogin() {
       setIsLoading(false);
     }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      try {
+        const res = await fetch('http://127.0.0.1:5000/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: tokenResponse.access_token })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('userToken', data.access_token);
+          await syncCartWithServer();
+          localStorage.setItem('userData', JSON.stringify(data.user));
+          
+          // UPDATE: Use the redirect target here too!
+          navigate(redirectTarget, { replace: true }); 
+        } else {
+          setError("Google login failed on our servers.");
+        }
+      } catch (err) {
+        setError("Network error connecting to Google.");
+      }
+      setIsLoading(false);
+    },
+    onError: () => setError('Google Sign-In was closed or failed.')
+  });
 
   return (
     <div className="min-h-screen bg-[#faf8f8] flex items-center justify-center relative overflow-hidden font-sans">
@@ -131,7 +166,8 @@ export default function UserLogin() {
           </div>
 
           <button 
-            type="button" 
+            type="button"
+            onClick={() => googleLogin()} 
             className="mt-6 w-full flex justify-center items-center gap-3 py-3 px-4 border border-gray-200 rounded-sm text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
           >
             {/* Google G Logo SVG */}

@@ -13,6 +13,8 @@ import Orders from './pages/admin/Orders';
 import Customers from './pages/admin/Customers';
 import OrderDetails from './pages/admin/OrderDetails';
 import Settings from './pages/admin/Settings';
+import Register from './pages/Register';
+import Account from './pages/Account';
 
 // Import Context and Drawer
 import { CartProvider } from './context/CartContext';
@@ -29,7 +31,10 @@ function App() {
           <Route path="/shop" element={<ProductListing />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/account" element={<Account />} />
           <Route path="/admin" element={<AdminLogin />} />
+
         
         {/* Protected Admin Routes */}
         <Route path="/admin/*" element={<AdminLayout />}>
