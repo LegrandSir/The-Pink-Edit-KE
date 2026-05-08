@@ -1,0 +1,76 @@
+# Query: http://127.0.0.1:5000
+# ContextLines: 1
+
+15 results - 12 files
+
+frontend/src/context/CartContext.jsx:
+  26      try {
+  27:       const response = await fetch('https://the-pink-edit-ke.onrender.com/api/cart/sync', {
+  28          method: 'POST',
+
+  79      if (token && newCartState) {
+  80:       fetch('https://the-pink-edit-ke.onrender.com/api/cart/sync', {
+  81          method: 'POST',
+
+frontend/src/pages/Checkout.jsx:
+  88        try {
+  89:         const response = await fetch('https://the-pink-edit-ke.onrender.com/api/checkout/mpesa', {
+  90            method: 'POST',
+
+frontend/src/pages/ProductDetail.jsx:
+  24    useEffect(() => {
+  25:     fetch(`https://the-pink-edit-ke.onrender.com/api/products/${id}`)
+  26        .then(res => {
+
+frontend/src/pages/ProductListing.jsx:
+  40    useEffect(() => {
+  41:     fetch('https://the-pink-edit-ke.onrender.com/api/products')
+  42        .then(res => {
+
+frontend/src/pages/Register.jsx:
+  20      try {
+  21:       const response = await fetch('https://the-pink-edit-ke.onrender.com/api/register', {
+  22          method: 'POST',
+
+frontend/src/pages/UserLogin.jsx:
+  26      try {
+  27:       const response = await fetch('https://the-pink-edit-ke.onrender.com/api/login', {
+  28          method: 'POST',
+
+  55        try {
+  56:         const res = await fetch('https://the-pink-edit-ke.onrender.com/api/auth/google', {
+  57            method: 'POST',
+
+frontend/src/pages/admin/AdminLogin.jsx:
+  19      try {
+  20:       const response = await fetch('https://the-pink-edit-ke.onrender.com/api/admin/login', {
+  21          method: 'POST',
+
+frontend/src/pages/admin/Customers.jsx:
+  12      
+  13:     fetch('https://the-pink-edit-ke.onrender.com/api/admin/customers', {
+  14        headers: { 'Authorization': `Bearer ${token}` }
+
+frontend/src/pages/admin/Dashboard.jsx:
+  12      
+  13:     fetch('https://the-pink-edit-ke.onrender.com/api/admin/dashboard/stats', {
+  14        headers: {
+
+frontend/src/pages/admin/OrderDetails.jsx:
+  11      const token = localStorage.getItem('adminToken');
+  12:     fetch(`https://the-pink-edit-ke.onrender.com/api/admin/orders/${id}`, {
+  13        headers: { 'Authorization': `Bearer ${token}` }
+
+frontend/src/pages/admin/Orders.jsx:
+  12      
+  13:     fetch('https://the-pink-edit-ke.onrender.com/api/admin/orders', {
+  14        headers: { 'Authorization': `Bearer ${token}` }
+
+frontend/src/pages/admin/Products.jsx:
+  23        
+  24:       const res = await fetch('https://the-pink-edit-ke.onrender.com/api/products', {
+  25          headers: {
+
+  58      try {
+  59:       const res = await fetch('https://the-pink-edit-ke.onrender.com/api/products', {
+  60          method: 'POST',
