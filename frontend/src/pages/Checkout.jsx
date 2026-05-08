@@ -49,7 +49,7 @@ export default function Checkout() {
     const message = `*✨ NEW ORDER - THE PINK EDIT ✨*%0A%0A*Customer:* ${formData.fullName}%0A*Phone:* ${formData.shippingPhone}%0A%0A*🛒 ORDER DETAILS:*%0A${itemsList}%0A%0A*Subtotal:* ${formatKsh(cartTotal)}%0A*Delivery:* ${formatKsh(deliveryFee)}%0A*TOTAL:* *${formatKsh(finalTotal)}*%0A%0A*STATUS:* ${paymentStatus}%0A%0A📦 *SHIPPING INFO:*%0A${deliveryString}`;
 
     // Replace with actual merchant phone
-    const merchantPhone = '254700000000'; 
+    const merchantPhone = '254769562049'; 
     const whatsappUrl = `https://wa.me/${merchantPhone}?text=${message}`;
 
     window.open(whatsappUrl, '_blank');
