@@ -21,7 +21,7 @@ export default function Products() {
     try {
       const token = localStorage.getItem('adminToken');
       
-      const res = await fetch('http://127.0.0.1:5000/api/products', {
+      const res = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/products', {
         headers: {
           'Authorization': `Bearer ${token}` 
         },
@@ -56,7 +56,7 @@ export default function Products() {
     const token = localStorage.getItem('adminToken');
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/products', {
+      const res = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/products', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

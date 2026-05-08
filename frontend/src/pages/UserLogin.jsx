@@ -24,7 +24,7 @@ export default function UserLogin() {
     setError('');
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/login', {
+      const response = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -53,7 +53,7 @@ export default function UserLogin() {
     onSuccess: async (tokenResponse) => {
       setIsLoading(true);
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/auth/google', {
+        const res = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/auth/google', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ access_token: tokenResponse.access_token })

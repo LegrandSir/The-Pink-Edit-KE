@@ -24,7 +24,7 @@ export function CartProvider({ children }) {
     if (!token) return;
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/cart/sync', {
+      const response = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/cart/sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export function CartProvider({ children }) {
     // If logged in, quietly update the database in the background
     const token = localStorage.getItem('userToken');
     if (token && newCartState) {
-      fetch('http://127.0.0.1:5000/api/cart/sync', {
+      fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/cart/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ localItems: newCartState })

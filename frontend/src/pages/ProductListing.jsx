@@ -38,7 +38,7 @@ export default function ProductListing() {
   }, [activeCategory, setSearchParams]);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/products')
+    fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/products')
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch products');
         return res.json();

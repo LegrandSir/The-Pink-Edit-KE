@@ -251,7 +251,7 @@ def create_app():
         password = generate_password(timestamp)
         
         # CRITICAL: This is where Safaricom will send the receipt. 
-        # For local testing, you MUST use an ngrok URL here, not 127.0.0.1
+        # For local testing, you MUST use an ngrok URL here, not https://the-pink-edit-ke.onrender.com
         callback_url = "https://swipe-list-portal.ngrok-free.dev"
 
         payload = {
