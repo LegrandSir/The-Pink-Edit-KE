@@ -1,4 +1,5 @@
 # backend/app.py
+import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from extensions import db, jwt, migrate
@@ -14,12 +15,12 @@ def create_app():
     CORS(app)
 
     # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pinkedit.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///pinkedit.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Secret Keys (These secure your login tokens)
-    app.config['SECRET_KEY'] = 'super-secret-pink-edit-key'
-    app.config['JWT_SECRET_KEY'] = 'super-secret-jwt-key' 
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-only')
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-jwt-key') 
 
     # Initialize extensions
     db.init_app(app)
