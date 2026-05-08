@@ -28,14 +28,10 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        // SUCCESS: Save the golden ticket (JWT) to localStorage!
         localStorage.setItem('adminToken', data.access_token);
         localStorage.setItem('adminUser', JSON.stringify(data.user));
-        
-        // Redirect to the dashboard
         navigate('/admin/dashboard');
       } else {
-        // FAILED: Show the error from Flask
         setError(data.error || 'Login failed. Please check your credentials.');
         setIsLoading(false);
       }
@@ -46,22 +42,22 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f8] flex items-center justify-center relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#faf8f8] flex items-center justify-center relative overflow-hidden font-sans px-4">
       
-      {/* Background Watermarks (from your design) */}
-      <div className="absolute top-20 left-20 text-[200px] font-serif text-gray-200/40 select-none z-0">Pink</div>
-      <div className="absolute bottom-10 right-20 text-[200px] font-serif text-gray-200/40 select-none z-0">Edit</div>
+      {/* Background Watermarks - Hidden on mobile, visible on medium+ screens */}
+      <div className="absolute top-20 left-20 text-[200px] font-serif text-gray-200/40 select-none z-0 hidden md:block">Pink</div>
+      <div className="absolute bottom-10 right-20 text-[200px] font-serif text-gray-200/40 select-none z-0 hidden md:block">Edit</div>
 
-      {/* Login Card */}
+      {/* Login Card - Padding reduced on mobile (p-8) vs desktop (sm:p-12) */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-12 rounded-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-[480px] z-10 border border-gray-100"
+        className="bg-white p-8 sm:p-12 rounded-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-[480px] z-10 border border-gray-100"
       >
-        <div className="text-center mb-10">
+        <div className="text-center mb-8 sm:mb-10">
           <div className="w-8 h-8 mx-auto mb-6 border-2 border-pink-500 transform rotate-45"></div>
-          <h1 className="text-3xl font-serif text-gray-900 mb-2">The Pink Edit</h1>
+          <h1 className="text-2xl sm:text-3xl font-serif text-gray-900 mb-2">The Pink Edit</h1>
           <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold">Administrative Portal</p>
         </div>
 
@@ -123,8 +119,8 @@ export default function AdminLogin() {
 
         <div className="mt-8 pt-8 border-t border-gray-100 text-center">
           <p className="text-[10px] text-gray-400 leading-relaxed">
-            Authorized access only. By continuing, you agree to our <br/>
-            <span className="hover:text-pink-500 cursor-pointer transition-colors">Privacy Policy and Security Terms.</span>
+            Authorized access only. By continuing, you agree to our <br className="hidden sm:block"/>
+            <span className="hover:text-pink-500 cursor-pointer transition-colors block sm:inline sm:mt-0 mt-1">Privacy Policy and Security Terms.</span>
           </p>
         </div>
       </motion.div>
