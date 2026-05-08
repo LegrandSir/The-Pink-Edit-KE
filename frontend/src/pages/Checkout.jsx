@@ -86,7 +86,7 @@ export default function Checkout() {
       setStatusMessage("Connecting to Safaricom...");
 
       try {
-        const response = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/checkout/mpesa', {
+        const response = await fetch('https://the-pink-edit-ke.onrender.com/api/checkout/mpesa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

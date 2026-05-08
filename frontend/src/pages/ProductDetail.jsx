@@ -22,7 +22,7 @@ export default function ProductDetail() {
   const [openAccordion, setOpenAccordion] = useState('notes');
 
   useEffect(() => {
-    fetch(`http://https://the-pink-edit-ke.onrender.com:5000/api/products/${id}`)
+    fetch(`https://the-pink-edit-ke.onrender.com/api/products/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Product not found');
         return res.json();

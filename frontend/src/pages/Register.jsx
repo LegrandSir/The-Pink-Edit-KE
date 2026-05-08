@@ -18,7 +18,7 @@ export default function Register() {
     setError('');
 
     try {
-      const response = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/register', {
+      const response = await fetch('https://the-pink-edit-ke.onrender.com/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),

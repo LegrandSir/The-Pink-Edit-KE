@@ -10,7 +10,7 @@ export default function Orders() {
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     
-    fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/admin/orders', {
+    fetch('https://the-pink-edit-ke.onrender.com/api/admin/orders', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {

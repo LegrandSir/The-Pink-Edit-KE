@@ -10,7 +10,7 @@ export default function Dashboard() {
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     
-    fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/admin/dashboard/stats', {
+    fetch('https://the-pink-edit-ke.onrender.com/api/admin/dashboard/stats', {
       headers: {
         'Authorization': `Bearer ${token}`
       }

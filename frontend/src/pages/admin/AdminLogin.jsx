@@ -17,7 +17,7 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      const response = await fetch('http://https://the-pink-edit-ke.onrender.com:5000/api/admin/login', {
+      const response = await fetch('https://the-pink-edit-ke.onrender.com/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
