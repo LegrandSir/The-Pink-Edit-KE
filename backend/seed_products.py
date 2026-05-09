@@ -48,7 +48,7 @@ def seed_products():
                 "status": "Active",
                 "tags": "",
                 "scent_family": "Floral",
-                "image": "https://images.unsplash.com/photo-1615486171448-6fc1d51c41c9?q=80&w=800&auto=format&fit=crop",
+                "image": "https://images.unsplash.com/photo-1615397323214-6c0b39bce1ee?q=80&w=800&auto=format&fit=crop",
                 "variants": [
                     {"sku": "VR-MIST-150ML", "size": "150ml", "price_adjustment": 0.00, "stock": 250}
                 ]
