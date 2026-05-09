@@ -26,7 +26,6 @@ export default function LandingPage() {
       <Navbar />
 
       {/* HERO SECTION */}
-      {/* MOBILE FIX: Centered text on mobile, left-aligned on desktop, adjusted padding */}
       <section className="relative h-[80vh] lg:h-[90vh] w-full flex items-center justify-center lg:justify-start px-6 lg:px-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
@@ -66,7 +65,6 @@ export default function LandingPage() {
           <div className="h-px w-24 bg-pink-300 mx-auto"></div>
         </div>
 
-        {/* MOBILE FIX: grid-cols-1 for phones, md:grid-cols-3 for tablets/laptops */}
         <motion.div 
           variants={staggerContainer}
           initial="hidden"
@@ -76,8 +74,8 @@ export default function LandingPage() {
         >
           {[
             { title: "Artisanal Perfume", img: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=800&auto=format&fit=crop" },
-            { title: "Fine Jewellery", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800&auto=format&fit=crop" },
-            { title: "Limited Edition", img: "https://images.unsplash.com/photo-1590156546946-ce55a12a6a5d?q=80&w=800&auto=format&fit=crop" }
+            { title: "Fine Jewellery", img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=800&auto=format&fit=crop" },
+            { title: "Limited Edition", img: "https://images.unsplash.com/photo-1615486171448-6fc1d51c41c9?q=80&w=800&auto=format&fit=crop" }
           ].map((item, index) => (
             <motion.div key={index} variants={fadeUp} className="group relative h-[300px] lg:h-[400px] overflow-hidden rounded-md cursor-pointer">
               <img src={item.img} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -90,7 +88,6 @@ export default function LandingPage() {
       </section>
 
       {/* CRAFTING MOMENTS (Split Section) */}
-      {/* MOBILE FIX: flex-col for stacking on phones, text-center adjustment */}
       <section className="py-16 lg:py-24 px-6 lg:px-12 bg-[#faf8f8] flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 max-w-7xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
@@ -139,7 +136,6 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* MOBILE FIX: grid-cols-1 to 2 to 4 */}
         <motion.div 
           variants={staggerContainer}
           initial="hidden"
@@ -148,9 +144,9 @@ export default function LandingPage() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto"
         >
           {[
-            { name: "L'Ombre Extrait", price: "Ksh 24,000", img: "https://images.unsplash.com/photo-1523293115678-efa8003fdf53?q=80&w=500&auto=format&fit=crop" },
-            { name: "Celestial Band", price: "Ksh 89,000", img: "https://images.unsplash.com/photo-1605100804763-247f67b2548e?q=80&w=500&auto=format&fit=crop" },
-            { name: "Velvet Rose Mist", price: "Ksh 9,500", img: "https://images.unsplash.com/photo-1595425964071-1a3b1a8f9411?q=80&w=500&auto=format&fit=crop" },
+            { name: "L'Ombre Extrait", price: "Ksh 24,000", img: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=500&auto=format&fit=crop" },
+            { name: "Celestial Band", price: "Ksh 89,000", img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=500&auto=format&fit=crop" },
+            { name: "Velvet Rose Mist", price: "Ksh 9,500", img: "https://images.unsplash.com/photo-1615486171448-6fc1d51c41c9?q=80&w=500&auto=format&fit=crop" },
             { name: "Pearl Drop Earrings", price: "Ksh 42,000", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=500&auto=format&fit=crop" }
           ].map((product, idx) => (
             <motion.div key={idx} variants={fadeUp} className="group cursor-pointer">
