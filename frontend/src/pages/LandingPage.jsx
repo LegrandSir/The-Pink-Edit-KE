@@ -75,7 +75,7 @@ export default function LandingPage() {
           {[
             { title: "Artisanal Perfume", img: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=800&auto=format&fit=crop" },
             { title: "Fine Jewellery", img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=800&auto=format&fit=crop" },
-            { title: "Limited Edition", img: "https://images.unsplash.com/photo-1615486171448-6fc1d51c41c9?q=80&w=800&auto=format&fit=crop" }
+            { title: "Limited Edition", img: "https://images.unsplash.com/photo-1615397323214-6c0b39bce1ee?q=80&w=800&auto=format&fit=crop" }
           ].map((item, index) => (
             <motion.div key={index} variants={fadeUp} className="group relative h-[300px] lg:h-[400px] overflow-hidden rounded-md cursor-pointer">
               <img src={item.img} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -97,7 +97,7 @@ export default function LandingPage() {
           className="w-full lg:w-1/2"
         >
           <img 
-            src="https://images.unsplash.com/photo-1616091216791-a5360b5ce757?q=80&w=800&auto=format&fit=crop" 
+            src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop"
             alt="Model with perfume" 
             className="w-full h-auto rounded-md shadow-2xl"
           />
@@ -146,7 +146,7 @@ export default function LandingPage() {
           {[
             { name: "L'Ombre Extrait", price: "Ksh 24,000", img: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=500&auto=format&fit=crop" },
             { name: "Celestial Band", price: "Ksh 89,000", img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=500&auto=format&fit=crop" },
-            { name: "Velvet Rose Mist", price: "Ksh 9,500", img: "https://images.unsplash.com/photo-1615486171448-6fc1d51c41c9?q=80&w=500&auto=format&fit=crop" },
+            { name: "Velvet Rose Mist", price: "Ksh 9,500", img: "https://images.unsplash.com/photo-1615397323214-6c0b39bce1ee?q=80&w=800&auto=format&fit=crop" },
             { name: "Pearl Drop Earrings", price: "Ksh 42,000", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=500&auto=format&fit=crop" }
           ].map((product, idx) => (
             <motion.div key={idx} variants={fadeUp} className="group cursor-pointer">
