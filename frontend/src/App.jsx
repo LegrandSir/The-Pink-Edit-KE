@@ -16,6 +16,7 @@ import Settings from './pages/admin/Settings';
 import Register from './pages/Register';
 import Account from './pages/Account';
 import CartDrawer from './components/CartDrawer';
+import PortfolioDemoBar from './components/PortfolioDemoBar';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,6 +31,7 @@ function App() {
     <Router>
       <ScrollToTop />
       <CartDrawer />
+      <PortfolioDemoBar />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<UserLogin />} />
